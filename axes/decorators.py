@@ -27,6 +27,8 @@ LOCK_OUT_AT_FAILURE = getattr(settings, 'AXES_LOCK_OUT_AT_FAILURE', True)
 
 USE_USER_AGENT = getattr(settings, 'AXES_USE_USER_AGENT', False)
 
+KEEP_ATTEMPTS = getattr(settings, 'AXES_KEEP_ATTEMPTS', False)
+
 COOLOFF_TIME = getattr(settings, 'AXES_COOLOFF_TIME', None)
 if isinstance(COOLOFF_TIME, int):
     COOLOFF_TIME = timedelta(hours=COOLOFF_TIME)
@@ -202,7 +204,7 @@ def check_request(request, login_unsuccessful):
                      ip)
     else:
         # user logged in -- forget the failed attempts
-        if attempt:
+        if not KEEP_ATTEMPTS and attempt:
             attempt.delete()
 
     return True
