@@ -66,7 +66,7 @@ def get_user_attempt(request):
     """
     ip = request.META.get('REMOTE_ADDR', '')
     if USE_USER_AGENT:
-        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
             user_agent=ua,
             ip_address=ip
@@ -180,7 +180,7 @@ def check_request(request, login_unsuccessful):
                 attempt.post_data,
                 query2str(request.POST.items())
             )
-            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
+            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:255]
             attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
             attempt.failures_since_start = failures
             attempt.attempt_time = datetime.now()
@@ -190,13 +190,13 @@ def check_request(request, login_unsuccessful):
                      (attempt.ip_address, failures))
         else:
             ip = request.META.get('REMOTE_ADDR', '')
-            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
             attempt = AccessAttempt.objects.create(
                 user_agent=ua,
                 ip_address=ip,
                 get_data=query2str(request.GET.items()),
                 post_data=query2str(request.POST.items()),
-                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>')[:255],
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 failures_since_start=failures
             )
