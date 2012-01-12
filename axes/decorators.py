@@ -66,7 +66,7 @@ def get_user_attempt(request):
     """
     ip = request.META.get('REMOTE_ADDR', '')
     if USE_USER_AGENT:
-        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+        ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
         attempts = AccessAttempt.objects.filter(
             user_agent=ua,
             ip_address=ip
@@ -172,15 +172,17 @@ def check_request(request, login_unsuccessful):
         # Create an AccessAttempt record if the login wasn't successful
         # has already attempted, update the info
         if attempt:
-            attempt.get_data = '%s\n---------\n%s' % (
+            attempt.get_data = '%s\n---------\n%s\n%s' % (
                 attempt.get_data,
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 query2str(request.GET.items()),
             )
-            attempt.post_data = '%s\n---------\n%s' % (
+            attempt.post_data = '%s\n---------\n%s\n%s' % (
                 attempt.post_data,
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 query2str(request.POST.items())
             )
-            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')
+            attempt.http_accept = request.META.get('HTTP_ACCEPT', '<unknown>')[:255]
             attempt.path_info = request.META.get('PATH_INFO', '<unknown>')
             attempt.failures_since_start = failures
             attempt.attempt_time = datetime.now()
@@ -190,13 +192,21 @@ def check_request(request, login_unsuccessful):
                      (attempt.ip_address, failures))
         else:
             ip = request.META.get('REMOTE_ADDR', '')
-            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')
+            ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
+            get_data = '%s\n%s' % (
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                query2str(request.GET.items()),
+            )
+            post_data = '%s\n%s' % (
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                query2str(request.POST.items())
+            )
             attempt = AccessAttempt.objects.create(
                 user_agent=ua,
                 ip_address=ip,
-                get_data=query2str(request.GET.items()),
-                post_data=query2str(request.POST.items()),
-                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
+                get_data=get_data,
+                post_data=post_data,
+                http_accept=request.META.get('HTTP_ACCEPT', '<unknown>')[:255],
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 failures_since_start=failures
             )
